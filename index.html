@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>研習計畫申請書產生器</title>
+<style>
+:root{
+  --bg:#f5f7f9; --panel:#fff; --line:#dfe5e9; --text:#24313b;
+  --muted:#6c7b86; --accent:#2f6d62; --accent-soft:#eaf3f0; --danger:#b94a48;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:24px 32px 12px}
+header h1{margin:0 0 6px;font-size:26px}
+header p{margin:0;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(420px,0.9fr) minmax(520px,1.1fr);gap:24px;padding:18px 32px 110px;align-items:start}
+.form-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.section{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+.section:first-child{border-top:0;padding-top:0;margin-top:0}
+.section h2{font-size:17px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid #cfd8dd;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
+textarea{min-height:86px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #b8d7cf;border-color:var(--accent)}
+.field{margin-bottom:12px}
+.session{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#fbfcfc}
+.session-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700}
+button{border:0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:#eef2f4;color:#334}
+.btn-outline{background:#fff;border:1px solid var(--line)}
+.btn-danger{background:#fff0ef;color:var(--danger)}
+.preview-wrap{position:sticky;top:18px}
+.preview-toolbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}
+.paper{
+  width:min(100%,794px); min-height:1123px; margin:auto; background:#fff; color:#111;
+  box-shadow:0 8px 30px rgba(24,38,49,.12); padding:58px 62px;
+  font-family:"Noto Serif TC","PMingLiU","Microsoft JhengHei",serif;
+}
+.paper h1{text-align:center;font-size:23px;margin:0 0 26px}
+.docline{font-size:16px;line-height:1.72;margin:3px 0}
+.docblock{font-size:16px;line-height:1.72;margin:4px 0 9px}
+.value{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif}
+.signatures{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:56px;text-align:center}
+.signature{border-top:1px solid #333;padding-top:10px;font-size:15px}
+.cost-card{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-top:8px;font-size:14px;line-height:1.7}
+.footer-actions{
+ position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);
+ border-top:1px solid var(--line);padding:12px 32px;display:flex;justify-content:flex-end;gap:10px;z-index:20
+}
+.mobile-tabs{display:none}
+.modal{position:fixed;inset:0;background:rgba(20,28,32,.66);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+.modal.show{display:flex}
+.modal-inner{width:min(900px,96vw);height:94vh;background:#f2f4f5;border-radius:16px;overflow:auto;padding:16px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;position:sticky;top:0;background:#f2f4f5;padding:4px 0 10px;z-index:2}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+@media (max-width:900px){
+ header{padding:18px 18px 8px}.layout{display:block;padding:12px 16px 100px}
+ .mobile-tabs{display:flex;gap:8px;margin:0 16px 6px}
+ .preview-wrap{position:static;display:none}.layout.show-preview .form-panel{display:none}.layout.show-preview .preview-wrap{display:block}
+ .paper{padding:34px 26px;min-height:auto}.grid2{grid-template-columns:1fr}
+ .footer-actions{padding:10px 16px}.desktop-only{display:none}
+}
+@media print{
+ body{background:#fff}.form-panel,header,.preview-toolbar,.footer-actions,.mobile-tabs,.modal-actions{display:none!important}
+ .layout{display:block;padding:0}.preview-wrap{display:block!important;position:static}.paper{box-shadow:none;width:210mm;min-height:297mm;padding:16mm}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>研習計畫申請書產生器</h1>
+  <p>請填寫以下研習資料，完成後即可預覽並下載正式申請書。</p>
+</header>
+
+<div class="mobile-tabs">
+  <button class="btn-primary" onclick="setMobileTab('form')">填寫表單</button>
+  <button class="btn-secondary" onclick="setMobileTab('preview')">預覽申請書</button>
+</div>
+
+<main class="layout" id="layout">
+  <section class="form-panel">
+    <div class="section">
+      <h2>基本資料</h2>
+      <div class="grid2">
+        <div class="field"><label>申請日</label><input id="applyDate" type="date"></div>
+        <div class="field"><label>研習申請區域</label><select id="region"><option>北區</option><option selected>中區</option><option>南區</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>研習類別</label><select id="type"><option value="實體">實體</option><option value="線上">線上</option></select></div>
+        <div class="field"><label>研習時數</label><input id="hours" placeholder="例如：6 小時"></div>
+      </div>
+      <div class="field"><label>是否需要申請教師研習時數</label><select id="teacherCredit"><option value="否">否</option><option value="是">是</option></select></div>
+      <div class="field"><label>研習主題</label><input id="topic" placeholder="例如：新制本土語文競賽、讀者劇場"></div>
+    </div>
+
+    <div class="section">
+      <h2>講師資料</h2>
+      <div class="field"><label>講師姓名</label><input id="teacher" placeholder="例如：張○○老師"></div>
+      <div class="grid2">
+        <div class="field"><label>手機</label><input id="phone" placeholder="09xx-xxx-xxx"></div>
+        <div class="field"><label>Email</label><input id="email" type="email" placeholder="teacher@example.com"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>研習場次</h2>
+      <div id="sessions"></div>
+      <button class="btn-outline" onclick="addSession()">＋ 新增場次</button>
+    </div>
+
+    <div class="section">
+      <h2>費用資料</h2>
+      <div class="grid2">
+        <div class="field"><label>講師時數</label><input id="lectureHours" type="number" min="0" step="0.5" value="3"></div>
+        <div class="field"><label>每小時講師費</label><input id="hourlyRate" type="number" min="0" value="2000"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>場地費</label><input id="otherCost" type="number" min="0" value="6000"></div>
+        <div class="field"><label>雜支費用</label><input id="miscCost" type="number" min="0" value="13000"></div>
+      </div>
+      <div class="cost-card" id="costSummary"></div>
+      <div class="field" style="margin-top:12px"><label>費用說明（可手動修改）</label><textarea id="costDesc"></textarea></div>
+    </div>
+
+    <div class="section">
+      <h2>行政資料</h2>
+      <div class="field"><label>研習性質</label><textarea id="nature" placeholder="請輸入研習性質"></textarea></div>
+      <div class="grid2">
+        <div class="field"><label>單位名稱</label><input id="unit" placeholder="例如：○○企業有限公司"></div>
+        <div class="field"><label>統一編號</label><input id="taxId" placeholder="例如：12345678"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>是否需要海報</label><select id="poster"><option>否</option><option>是</option></select></div>
+        <div class="field"><label>是否需要指示牌</label><select id="sign"><option>否</option><option>是</option></select></div>
+      </div>
+      <div class="field"><label>其他</label><textarea id="other" placeholder="其他補充事項"></textarea></div>
+    </div>
+  </section>
+
+  <section class="preview-wrap">
+    <div class="preview-toolbar desktop-only">
+      <button class="btn-outline" onclick="openFullPreview()">完整預覽</button>
+    </div>
+    <article class="paper" id="paper"></article>
+  </section>
+</main>
+
+<div class="footer-actions">
+  <button class="btn-outline" onclick="openFullPreview()">預覽正式文件</button>
+  <button class="btn-secondary" onclick="downloadWord()">下載 Word</button>
+  <button class="btn-primary" onclick="downloadPDF()">下載 PDF</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-inner">
+    <div class="modal-actions"><strong style="margin-right:auto;padding:10px 4px">正式文件完整預覽</strong>
+      <button class="btn-outline" onclick="closePreview()">返回修改</button>
+      <button class="btn-secondary" onclick="downloadWord()">下載 Word</button>
+      <button class="btn-primary" onclick="downloadPDF()">下載 PDF</button>
+    </div>
+    <article class="paper" id="modalPaper"></article>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => (s ?? '').toString().replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const fmtMoney = n => Number(n||0).toLocaleString('zh-TW');
+const fmtDate = d => d ? d.replaceAll('-','/') : '';
+const shortDate = d => { if(!d) return ''; const [y,m,day]=d.split('-'); return `${Number(m)}/${Number(day)}`; };
+
+let sessionData = [
+  {date:'2025-04-12', start:'09:00', end:'12:00', place:'○○大學', people:80},
+  {date:'2025-04-19', start:'09:00', end:'12:00', place:'○○大學', people:80}
+];
+
+function addSession(data={date:'',start:'09:00',end:'12:00',place:'',people:''}){
+  sessionData.push(data); renderSessions(); update();
+}
+function removeSession(i){ if(sessionData.length>1){sessionData.splice(i,1);renderSessions();update();} }
+function renderSessions(){
+  const box=$('sessions'); box.innerHTML='';
+  sessionData.forEach((s,i)=>{
+    const el=document.createElement('div'); el.className='session';
+    el.innerHTML=`
+      <div class="session-head"><span>場次 ${i+1}</span>${sessionData.length>1?`<button class="btn-danger" onclick="removeSession(${i})">移除</button>`:''}</div>
+      <div class="grid2">
+        <div class="field"><label>辦理日期</label><input type="date" value="${s.date||''}" oninput="setSession(${i},'date',this.value)"></div>
+        <div class="field"><label>人數限制</label><input type="number" min="0" value="${s.people||''}" oninput="setSession(${i},'people',this.value)"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>開始時間</label><input type="time" value="${s.start||''}" oninput="setSession(${i},'start',this.value)"></div>
+        <div class="field"><label>結束時間</label><input type="time" value="${s.end||''}" oninput="setSession(${i},'end',this.value)"></div>
+      </div>
+      <div class="field"><label>辦理地點</label><input value="${esc(s.place||'')}" oninput="setSession(${i},'place',this.value)"></div>
+    `;
+    box.appendChild(el);
+  })
+}
+function setSession(i,k,v){ sessionData[i][k]=v; update(); }
+
+function minutesBetween(start,end){
+  if(!start||!end) return null;
+  const [sh,sm]=start.split(':').map(Number), [eh,em]=end.split(':').map(Number);
+  return (eh*60+em)-(sh*60+sm);
+}
+function getData(){
+  const totalPeople=sessionData.reduce((a,s)=>a+Number(s.people||0),0);
+  const samePeople=sessionData.length && sessionData.every(s=>Number(s.people||0)===Number(sessionData[0].people||0));
+  const sameTime=sessionData.length && sessionData.every(s=>s.start===sessionData[0].start && s.end===sessionData[0].end);
+  const dur = sessionData[0] ? minutesBetween(sessionData[0].start,sessionData[0].end) : null;
+  const lectureFee=Number($('lectureHours').value||0)*Number($('hourlyRate').value||0)*sessionData.length;
+  const total=lectureFee+Number($('otherCost').value||0)+Number($('miscCost').value||0);
+  return {
+    applyDate:$('applyDate').value, region:$('region').value, type:$('type').value, hours:$('hours').value, topic:$('topic').value,
+    teacher:$('teacher').value, phone:$('phone').value, email:$('email').value, teacherCredit:$('teacherCredit').value, nature:$('nature').value,
+    unit:$('unit').value, taxId:$('taxId').value, poster:$('poster').value, sign:$('sign').value,
+    miscCost:Number($('miscCost').value||0), costDesc:$('costDesc').value, other:$('other').value,
+    dates:sessionData.map(s=>fmtDate(s.date)).filter(Boolean).join('、'),
+    times:sameTime && sessionData[0] ? `${sessionData[0].start}～${sessionData[0].end}${dur>0?`，每場 ${dur/60} 小時`:''}` : sessionData.map(s=>`${shortDate(s.date)} ${s.start}～${s.end}`).join('、'),
+    places:sessionData.map(s=>`${shortDate(s.date)} ${s.place}`).filter(x=>x.trim()).join('、'),
+    people:(samePeople && sessionData[0]) ? `每場 ${sessionData[0].people||0} 人，共 ${totalPeople} 人次` : `共 ${totalPeople} 人次`,
+    lectureFee,total
+  }
+}
+function blank(v){return v?esc(v):'＿＿＿＿'}
+function docHTML(){
+  const d=getData();
+  const teacher=[d.teacher,d.phone,d.email].filter(Boolean).join('／');
+  const nature = [d.nature, d.unit?`單位：${d.unit}`:'', d.taxId?`統編：${d.taxId}`:''].filter(Boolean).join('<br>');
+  const posterSign=`海報：${d.poster}；指示牌：${d.sign}`;
+  return `
+    <h1>金安文教機構研習計畫申請書</h1>
+    <div class="docline">▼申請日：<span class="value">${blank(fmtDate(d.applyDate))}</span></div>
+    <div class="docline">一、研習申請區域：<span class="value">${blank(d.region)}</span></div>
+    <div class="docline">二、研習類別：<span class="value">${blank(d.type)}</span></div>
+    <div class="docline">三、研習時數：<span class="value">${blank(d.hours)}</span></div>
+    <div class="docline">是否需要申請教師研習時數：<span class="value">${blank(d.teacherCredit)}</span></div>
+    <div class="docline">四、研習主題：<span class="value">${blank(d.topic)}</span></div>
+    <div class="docline">五、講師／手機／電郵：<span class="value">${blank(teacher)}</span></div>
+    <div class="docline">六、辦理日期：<span class="value">${blank(d.dates)}</span></div>
+    <div class="docline">七、辦理時間：<span class="value">${blank(d.times)}</span></div>
+    <div class="docline">八、辦理地點：<span class="value">${blank(d.places)}</span></div>
+    <div class="docline">九、人數限制：<span class="value">${blank(d.people)}</span></div>
+    <div class="docblock">十、研習性質：<br><span class="value">${nature||'＿＿＿＿＿＿＿＿＿＿＿＿＿＿'}</span></div>
+    <div class="docline">十一、海報、指示牌：<span class="value">${esc(posterSign)}</span></div>
+    <div class="docline">十二、雜支費用：<span class="value">${d.miscCost?fmtMoney(d.miscCost)+' 元':'＿＿＿＿'}</span></div>
+    <div class="docblock">十三、費用說明：<br><span class="value">${d.costDesc?esc(d.costDesc).replaceAll('\n','<br>'):'＿＿＿＿＿＿＿＿＿＿＿＿＿＿'}</span></div>
+    <div class="docblock">十四、其他：<br><span class="value">${d.other?esc(d.other).replaceAll('\n','<br>'):'＿＿＿＿＿＿＿＿＿＿＿＿＿＿'}</span></div>
+    <div class="docline">十五、研習完畢請檢附簽到簿、活動照片及相關文件以利核銷。</div>
+    <div class="docline">十六、本計畫經主管核可後實施，修正時亦同。</div>
+    <div class="signatures">
+      <div class="signature">申請人</div><div class="signature">單位主管</div><div class="signature">副總</div><div class="signature">總經理</div>
+    </div>`;
+}
+function updateCostTextIfAuto(){
+  if($('costDesc').dataset.manual==='1') return;
+  const d=getData();
+  const lh=Number($('lectureHours').value||0), rate=Number($('hourlyRate').value||0), other=Number($('otherCost').value||0), misc=Number($('miscCost').value||0);
+  $('costDesc').value=`講師費：${lh} 小時 × ${fmtMoney(rate)} 元 × ${sessionData.length} 場 = ${fmtMoney(d.lectureFee)} 元\n場地費：${fmtMoney(other)} 元\n雜支費用：${fmtMoney(misc)} 元\n總費用：${fmtMoney(d.total)} 元`;
+}
+function update(){
+  const d=getData();
+  $('costSummary').innerHTML=`講師費：${$('lectureHours').value||0} 小時 × ${fmtMoney($('hourlyRate').value||0)} 元 × ${sessionData.length} 場 ＝ <b>${fmtMoney(d.lectureFee)} 元</b><br>總費用：<b>${fmtMoney(d.total)} 元</b>`;
+  updateCostTextIfAuto();
+  $('paper').innerHTML=docHTML();
+  $('modalPaper').innerHTML=docHTML();
+}
+function openFullPreview(){
+  update();
+  $('modal').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closePreview(){
+  $('modal').classList.remove('show');
+  document.body.style.overflow='';
+}
+$('modal').addEventListener('click', (e)=>{ if(e.target===$('modal')) closePreview(); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && $('modal').classList.contains('show')) closePreview(); });
+function setMobileTab(t){ $('layout').classList.toggle('show-preview', t==='preview'); }
+function filename(ext){
+  const d=getData(); const topic=(d.topic||'未命名').replace(/[\\/:*?"<>|]/g,'_').slice(0,30);
+  const date=(sessionData[0]?.date||d.applyDate||'').replaceAll('/','-');
+  return `研習計畫申請書_${topic}_${date||'未填日期'}.${ext}`;
+}
+
+async function downloadPDF(){
+  const d = getData();
+  const source = $('paper');
+
+  // Clone the visible A4 document so the exported PDF contains only the document itself.
+  const clone = source.cloneNode(true);
+  clone.style.boxShadow = 'none';
+  clone.style.margin = '0';
+  clone.style.width = '210mm';
+  clone.style.minHeight = '297mm';
+  clone.style.padding = '16mm';
+  clone.style.background = '#fff';
+
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-100000px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '210mm';
+  wrapper.style.background = '#fff';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  const opt = {
+    margin: 0,
+    filename: filename('pdf'),
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      windowWidth: clone.scrollWidth
+    },
+    jsPDF: {
+      unit: 'mm',
+      format: 'a4',
+      orientation: 'portrait'
+    },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
+
+  try {
+    await html2pdf().set(opt).from(clone).save();
+  } catch (err) {
+    console.error(err);
+    alert('PDF 產生失敗，請重新整理頁面後再試一次。');
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+function downloadWord(){
+  const content=`<!doctype html><html><head><meta charset="utf-8"><style>
+  @page{size:A4;margin:18mm}body{font-family:"Microsoft JhengHei","PMingLiU";font-size:12pt;line-height:1.7;color:#000}
+  h1{text-align:center;font-size:18pt;margin-bottom:22px}.signatures{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:50px;text-align:center}.signature{border-top:1px solid #333;padding-top:8px}
+  </style></head><body>${docHTML()}</body></html>`;
+  const blob=new Blob(['\ufeff',content],{type:'application/msword'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename('doc'); a.click(); URL.revokeObjectURL(a.href);
+}
+document.querySelectorAll('input,select,textarea').forEach(el=>{
+  el.addEventListener('input',()=>{ if(el.id==='costDesc') el.dataset.manual='1'; update(); });
+  el.addEventListener('change',update);
+});
+$('applyDate').value=new Date().toISOString().slice(0,10);
+$('hours').value='6 小時';
+$('topic').value='新制本土語文競賽、讀者劇場';
+$('teacher').value='張○○老師';
+$('nature').value='本土語研習';
+$('unit').value='○○企業有限公司';
+$('taxId').value='12345678';
+renderSessions(); update();
+</script>
+</body>
+</html>
