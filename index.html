@@ -97,12 +97,12 @@ button{border:0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer
       <h2>基本資料</h2>
       <div class="grid2">
         <div class="field"><label>申請日</label><input id="applyDate" type="date"></div>
-        <div class="field"><label>研習申請區域</label><select id="region"><option>北區</option><option selected>中區</option><option>南區</option><option>全區</option></select></div>
+        <div class="field"><label>研習申請區域</label><select id="region"><option value="" selected disabled>請選擇</option><option>北區</option><option>中區</option><option>南區</option><option>全區</option></select></div>
       </div>
-      <div class="field"><label>研習類別</label><select id="type"><option value="實體">實體</option><option value="線上">線上</option></select></div>
+      <div class="field"><label>研習類別</label><select id="type"><option value="" selected disabled>請選擇</option><option value="實體">實體</option><option value="線上">線上</option></select></div>
       <div class="grid2">
         <div class="field"><label>研習時數</label><input id="hours" placeholder="例如：6 小時"></div>
-        <div class="field"><label>是否需要申請教師研習時數</label><select id="teacherCredit"><option value="否">否</option><option value="是">是</option></select><div class="credit-note">（有製作公文、發送等流程，不一定能配合。如有特定合作學校，請與之聯繫，或有其他狀況，請與行企討論。）</div></div>
+        <div class="field"><label>是否需要申請教師研習時數</label><select id="teacherCredit"><option value="" selected disabled>請選擇</option><option value="否">否</option><option value="是">是</option></select><div class="credit-note">（有製作公文、發送等流程，不一定能配合。如有特定合作學校，請與之聯繫，或有其他狀況，請與行企討論。）</div></div>
       </div>
       <div class="field"><label>研習主題</label><input id="topic" placeholder="例如：新制本土語文競賽、讀者劇場"></div>
     </div>
@@ -144,8 +144,8 @@ button{border:0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer
         <div class="field"><label>統一編號</label><select id="taxId"><option value="" selected disabled>請選擇</option><option value="16578128">16578128</option><option value="98668479">98668479</option><option value="47851121">47851121</option></select></div>
       </div>
       <div class="grid2">
-        <div class="field"><label>是否需要海報</label><select id="poster"><option>否</option><option>是</option></select></div>
-        <div class="field"><label>是否需要指示牌</label><select id="sign"><option>否</option><option>是</option></select></div>
+        <div class="field"><label>是否需要海報</label><select id="poster"><option value="" selected disabled>請選擇</option><option>否</option><option>是</option></select></div>
+        <div class="field"><label>是否需要指示牌</label><select id="sign"><option value="" selected disabled>請選擇</option><option>否</option><option>是</option></select></div>
       </div>
       <div class="field"><label>其他</label><textarea id="other" placeholder="例：請公司支援人力、影印講義...等，若無需求，免填。"></textarea></div>
     </div>
@@ -243,7 +243,7 @@ function docHTML(){
   const d=getData();
   const teacher=[d.teacher,d.phone,d.email].filter(Boolean).join('／');
   const nature = [d.nature, d.unit?`單位：${d.unit}`:'', d.taxId?`統編：${d.taxId}`:''].filter(Boolean).join('<br>');
-  const posterSign=`海報：${d.poster}；指示牌：${d.sign}`;
+  const posterSign=`海報：${d.poster||'＿＿＿＿'}；指示牌：${d.sign||'＿＿＿＿'}`;
   return `
     <h1>金安文教機構研習計畫申請書</h1>
     <div class="docline">▼申請日：<span class="value">${blank(fmtDate(d.applyDate))}</span></div>
@@ -432,7 +432,7 @@ async function downloadWord(){
   if(d.nature) addLine(d.nature); else addBlank();
   if(d.unit) addLine(`單位：${d.unit}`);
   if(d.taxId) addLine(`統編：${d.taxId}`);
-  addLine(`十一、海報、指示牌：海報：${d.poster}；指示牌：${d.sign}`);
+  addLine(`十一、海報、指示牌：海報：${d.poster || '＿＿＿＿'}；指示牌：${d.sign || '＿＿＿＿'}`);
   addLine(`十二、雜支費用：${d.miscCost ? fmtMoney(d.miscCost)+' 元' : '＿＿＿＿'}`);
   addLine('十三、費用說明：', {keepNext:true});
   if(d.costDesc){
