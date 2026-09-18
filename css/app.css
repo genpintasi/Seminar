@@ -1,0 +1,11 @@
+/* 第二階段 UI 覆寫層：集中管理色彩與響應式行為。 */
+:root{--accent:#5f8178;--accent-soft:#e5eeeb;--danger:#b06f6a;--morandi-blue:#71879a;--morandi-sand:#c5b9a7}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#4f7168}
+.btn-secondary{background:var(--morandi-blue);color:#fff}.btn-secondary:hover{background:#60778b}
+.btn-outline{background:var(--morandi-sand);border:1px solid #ad9f8c;color:#3e474c}.btn-outline:hover{background:#b7aa98}
+.btn-danger{background:#f0ddda;color:var(--danger)}.btn-danger:hover{background:#e8c9c4}
+@media (max-width:900px){
+  .banner-actions{max-width:calc(100vw - 130px);overflow-x:auto}
+  .banner-actions button{font-size:10px;padding:2px 6px}
+  .layout{padding-bottom:32px}
+}
