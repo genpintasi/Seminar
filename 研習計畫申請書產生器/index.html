@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="css/app.css" />
+<title>研習計畫申請書產生器</title>
+<style>
+:root{
+  --bg:#f5f7f9; --panel:#fff; --line:#dfe5e9; --text:#24313b;
+  --muted:#6c7b86; --accent:#5f8178; --accent-soft:#e5eeeb; --danger:#b06f6a;
+  --morandi-blue:#71879a; --morandi-sand:#c5b9a7; --morandi-rose:#c28f8a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{height:5vh;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:18px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+header h1{margin:0;font-size:18px;white-space:nowrap}
+header p{display:none}
+.layout{display:grid;grid-template-columns:minmax(420px,0.95fr) minmax(520px,1.05fr);gap:24px;padding:18px 32px 32px;align-items:start}
+.form-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.section{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+.section:first-child{border-top:0;padding-top:0;margin-top:0}
+.section h2{font-size:17px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid #cfd8dd;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
+textarea{min-height:86px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #b8d7cf;border-color:var(--accent)}
+.field{margin-bottom:12px}
+.session{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#fbfcfc}
+.session-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700}
+button{border:0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#4f7168}
+.btn-secondary{background:var(--morandi-blue);color:#fff}.btn-secondary:hover{background:#60778b}
+.btn-outline{background:var(--morandi-sand);border:1px solid #ad9f8c;color:#3e474c}.btn-outline:hover{background:#b7aa98}
+.btn-danger{background:#f0ddda;color:var(--danger)}.btn-danger:hover{background:#e8c9c4}
+.preview-wrap{position:sticky;top:calc(5vh + 18px);min-width:0;grid-column:1;grid-row:1;padding-right:4px}
+.form-panel{grid-column:2;grid-row:1}
+.preview-toolbar{display:none}
+.paper-stage{position:relative;width:100%;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;cursor:pointer}
+.modal .paper-stage{overflow:visible;width:max-content;min-width:100%;}
+.paper-stage .paper{flex:0 0 210mm;transform-origin:top center}
+.paper{
+  width:210mm; min-height:297mm; margin:auto; background:#fff; color:#000;
+  box-shadow:0 8px 30px rgba(24,38,49,.12); padding:18mm;
+  font-family:"Microsoft JhengHei","PMingLiU","Noto Serif TC",serif;
+  font-size:10.5pt; line-height:1.55;
+}
+.paper h1{text-align:center;font-size:15pt;margin:0 0 18px;font-weight:700}
+.docline{font-size:10.5pt;line-height:1.55;margin:2px 0}
+.docblock{font-size:10.5pt;line-height:1.55;margin:3px 0 6px}
+.value{font-family:"Microsoft JhengHei","PMingLiU",sans-serif}
+.signatures{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:18px 0;margin-top:36px;page-break-inside:avoid}
+.signatures td{width:25%;border-top:1px solid #333;text-align:center;padding-top:6px;font-size:10.5pt;white-space:nowrap}
+.cost-card{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-top:8px;font-size:14px;line-height:1.7}
+.banner-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-shrink:0}
+.banner-status{font-size:11px;color:var(--muted);white-space:nowrap}
+.banner-actions button{height:calc(5vh - 8px);max-height:32px;min-height:20px;padding:2px 8px;font-size:11px;line-height:1.1;white-space:nowrap}
+.mobile-tabs{display:none}
+.modal{position:fixed;inset:0;background:rgba(20,28,32,.66);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+.modal.show{display:flex}
+.modal-inner{width:min(900px,96vw);height:94vh;background:#f2f4f5;border-radius:16px;overflow:auto;padding:16px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;position:sticky;top:0;background:#f2f4f5;padding:4px 0 10px;z-index:2}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.credit-note{font-size:12px;color:#c62828;line-height:1.55;margin-top:6px}
+.validation-panel{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;background:#fbfcfc;font-size:13px;line-height:1.6}
+.validation-panel h2{font-size:15px;margin:0 0 6px}.validation-panel ul{margin:4px 0 0;padding-left:22px}.validation-ok{color:#2f6d62}.validation-warning{color:#9a6a00}.validation-error{color:var(--danger)}
+.section-status{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin:6px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}.section-status span{white-space:nowrap}.status-done{color:#2f6d62}.status-pending{color:#6c7b86}.status-alert{color:#b94a48}
+.validation-panel li{margin:3px 0}.validation-panel .fix-link{border:0;background:none;color:var(--accent);padding:0 4px;font-size:12px;text-decoration:underline}
+.draft-status{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}.field-error{border-color:var(--danger)!important;background:#fff8f7}
+@media (max-width:900px){
+ header{padding:0 12px}.layout{display:flex;flex-direction:column;padding:12px 16px 32px}
+ header h1{font-size:15px}.banner-actions{gap:3px;max-width:calc(100vw - 130px);overflow-x:auto}.banner-actions button{height:calc(5vh - 6px);padding:2px 6px;font-size:10px}
+ .form-panel,.preview-wrap{grid-column:auto;grid-row:auto;width:100%}.form-panel{order:1}.preview-wrap{order:2}
+ .mobile-tabs{display:flex;gap:8px;margin:0 16px 6px}
+ .preview-wrap{position:static;display:none;padding-right:0}.layout.show-preview .form-panel{display:none}.layout.show-preview .preview-wrap{display:block}
+ .preview-wrap{overflow:hidden}.paper-stage{overflow:hidden}.paper{min-height:297mm}.grid2{grid-template-columns:1fr}
+ .desktop-only{display:none}
+}
+@page{size:A4;margin:0}
+@media print{
+ html,body{margin:0!important;padding:0!important;background:#fff!important}
+ .form-panel,header,.preview-toolbar,.banner-actions,.mobile-tabs,.modal,.modal-actions,.validation-panel{display:none!important}
+ .layout{display:block!important;padding:0!important;margin:0!important}
+ .preview-wrap{display:block!important;position:static!important;margin:0!important;padding:0!important}
+ .paper-stage{display:block!important;width:auto!important;height:auto!important;overflow:visible!important}
+ .paper{transform:none!important;box-shadow:none!important;width:210mm!important;height:297mm!important;min-height:297mm!important;margin:0!important;padding:18mm!important;overflow:hidden!important}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>研習計畫申請書產生器</h1>
+  <div class="banner-actions">
+    <span class="banner-status" id="bannerDraftStatus" aria-live="polite"></span>
+    <button class="btn-outline" onclick="manualSaveDraft()">儲存草稿</button>
+    <button class="btn-secondary" onclick="downloadWord()">下載 Word</button>
+    <button class="btn-primary" onclick="downloadPDF()">列印／另存 PDF</button>
+  </div>
+</header>
+
+<div class="mobile-tabs">
+  <button class="btn-primary" onclick="setMobileTab('form')">填寫表單</button>
+  <button class="btn-secondary" onclick="setMobileTab('preview')">預覽申請書</button>
+</div>
+
+<main class="layout" id="layout">
+  <section class="form-panel">
+    <div class="section">
+      <h2>基本資料</h2>
+      <div class="grid2">
+        <div class="field"><label>申請日</label><input id="applyDate" type="date"></div>
+        <div class="field"><label>研習申請區域</label><select id="region"><option value="" selected disabled>請選擇</option><option>北區</option><option>中區</option><option>南區</option><option>全區</option></select></div>
+      </div>
+      <div class="field"><label>研習類別</label><select id="type"><option value="" selected disabled>請選擇</option><option value="實體">實體</option><option value="線上">線上</option></select></div>
+      <div class="grid2">
+        <div class="field"><label>研習時數</label><input id="hours" placeholder="例如：6 小時"></div>
+        <div class="field"><label>是否需要申請教師研習時數</label><select id="teacherCredit"><option value="" selected disabled>請選擇</option><option value="否">否</option><option value="是">是</option></select><div class="credit-note">（有製作公文、發送等流程，不一定能配合。如有特定合作學校，請與之聯繫，或有其他狀況，請與行企討論。）</div></div>
+      </div>
+      <div class="field"><label>研習主題</label><input id="topic" placeholder="例如：新制本土語文競賽、讀者劇場"></div>
+    </div>
+
+    <div class="section">
+      <h2>講師資料</h2>
+      <div class="field"><label>講師姓名</label><input id="teacher" placeholder="例如：張○○老師"></div>
+      <div class="grid2">
+        <div class="field"><label>手機</label><input id="phone" placeholder="09xx-xxx-xxx"></div>
+        <div class="field"><label>Email</label><input id="email" type="email" placeholder="teacher@example.com"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>研習場次</h2>
+      <div id="sessions"></div>
+      <button class="btn-outline" onclick="addSession()">＋ 新增場次</button>
+    </div>
+
+    <div class="section">
+      <h2>費用資料</h2>
+      <div class="grid2">
+        <div class="field"><label>講師時數</label><input id="lectureHours" type="number" min="0" step="0.5" value=""></div>
+        <div class="field"><label>每小時講師費</label><input id="hourlyRate" type="number" min="0" value=""></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>場地費</label><input id="otherCost" type="number" min="0" value=""></div>
+        <div class="field"><label>雜支費用</label><input id="miscCost" type="number" min="0" value=""></div>
+      </div>
+      <div class="cost-card" id="costSummary"></div>
+      <div class="field" style="margin-top:12px"><label>費用說明</label>
+        <textarea id="costDesc" placeholder="費用資料變更時會自動更新；你也可以直接修改文字內容。"></textarea>
+        <button class="btn-outline" type="button" id="applyAutoCost" style="margin-top:8px">自動產生費用說明</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>行政資料</h2>
+      <div class="field"><label>研習性質</label><select id="nature"><option value="" selected disabled>請選擇</option><option value="教科書">教科書</option><option value="本土語">本土語</option><option value="其他">其他</option></select></div>
+      <div class="grid2">
+        <div class="field"><label>單位名稱</label><select id="unit"><option value="" selected disabled>請選擇</option><option value="真平企業有限公司">真平企業有限公司</option><option value="台灣海翁台語文教育協會">台灣海翁台語文教育協會</option><option value="中華國民教育推廣協會">中華國民教育推廣協會</option></select></div>
+        <div class="field"><label>統一編號（依單位自動帶出）</label><input id="taxId" readonly placeholder="選擇單位後自動帶出"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>是否需要海報</label><select id="poster"><option value="" selected disabled>請選擇</option><option>否</option><option>是</option></select></div>
+        <div class="field"><label>是否需要指示牌</label><select id="sign"><option value="" selected disabled>請選擇</option><option>否</option><option>是</option></select></div>
+      </div>
+      <div class="field"><label>其他</label><textarea id="other" placeholder="例：請公司支援人力、影印講義...等，若無需求，免填。"></textarea></div>
+    </div>
+    <div class="draft-status" id="draftStatus" aria-live="polite"></div>
+    <button class="btn-danger" type="button" onclick="clearCurrentData()">清除目前資料</button>
+  </section>
+
+  <section class="preview-wrap">
+    <div class="validation-panel" id="validationPanel" aria-live="polite"></div>
+    <div class="paper-stage" id="paperStage" role="button" tabindex="0" aria-label="點擊開啟完整預覽"><article class="paper" id="paper"></article></div>
+  </section>
+</main>
+
+<div class="modal" id="modal">
+  <div class="modal-inner">
+    <div class="modal-actions"><strong style="margin-right:auto;padding:10px 4px">正式文件完整預覽</strong>
+      <button class="btn-outline" onclick="closePreview()">返回修改</button>
+      <button class="btn-secondary" onclick="downloadWord()">下載 Word</button>
+      <button class="btn-primary" onclick="downloadPDF()">列印／另存 PDF</button>
+    </div>
+    <div class="paper-stage" id="modalPaperStage"><article class="paper" id="modalPaper"></article></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/model.js"></script>
+<script src="js/validation.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/session.js"></script>
+<script src="js/form.js"></script>
+<script src="js/document.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/word.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
